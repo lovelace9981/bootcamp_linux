@@ -14,7 +14,6 @@
 \horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
 }
 
-
 %https://es.overleaf.com/learn/latex/Inserting_Images
 %Ruta relativa de   imagenes
 
@@ -40,6 +39,15 @@
 %	Cuestión 1
 %----------------------------------------------------------------------------------------
 
+\section{Topología de red}
+Se ha seguido una topología de red que nos ha permitido conectar por capa 2 los dispositivos y que estos puedan acceder a servicios de DNS compartidos sin tener que modificar nada más.
+
+\begin{turn}{90}   
+    \centering
+    \includegraphics[scale=0.25]{30}
+\end{turn}
+
+\newpage
 \section{Preparación de DNS}
 
 En primer lugar, tenemos que preparar el servicio DNS, para poder utilizar el registro MX utilizado para los servicios de correo asociados. Así como podemos indicar la preferencia de los servidores de correo, porque podemos indicar más de uno. El valor más bajo de preferencia, es el que mayor prioridad queremos que tenga, por convención se usa el 10, 20, 30...
@@ -136,13 +144,264 @@ sendmail pedro@mail.net < mail.txt
 	\caption{Recepción del correo electrónico.}
 \end{figure}
 
-Para poder ver los correos, vamos a \textbf{/var/log/mail/\$USER}
+Para poder ver los correos, vamos a \textbf{/var/log/mail/\$USER}. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{07}
+	\caption{Correos en /var/log/mail/.}
+\end{figure}
+
+Por último tenemos que configurar el \textbf{home\_mailbox}, para que podamos tenerlo en el \$HOME del usuario, sobre todo a la hora de que Dovecot pueda leer los mensajes para utilizarlos con los protocolos clientes de IMAP o POP3.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.25]{06}
+	\caption{Configuración del home de los correos.}
+\end{figure}
+
+Ahora inicializamos el servicio y comprobamos si hay errores.
+\begin{lstlisting}[style=mybash]
+sudo postfix check
+# Habilitamos el arranque del servicio
+sudo systemctl enable postfix.service
+sudo systemctl start postfix.service
+# Comprobamos si hay errores
+sudo journalctl -xeu dovecot.service
+\end{lstlisting}
+
+
+\subsection{TLS en Postfix}
+
+Ahora tenemos que configurar TLS en el Postfix para hacer el envío y recepción seguros con TLS. Primero tenemos que generar una clave privada que nos permita el cifrado asimétrico clásico de RSA que se usa en TLS, luego tenemos que generar a partir de esa clave privada el certificado público de tipo x509 que el servidor provee a los clientes.
+
+\begin{lstlisting}[style=mybash]
+# PRIVATE KEY GEN
+sudo openssl genrsa -out /etc/pki/mail.key.pem 2048
+# PUBLIC AND CERT x509 GEN
+sudo openssl req -key /etc/pki/mail.key.pem -new -x509 -days 365 -out /etc/pki/mail.cert.pem
+\end{lstlisting}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{08}
+	\caption{Generación del certificado SSL para mail.net}
+\end{figure}
+
+Ahora tenemos que configurar el servidor Postfix, para que pueda utilizar correctamente el certificaodo, por defecto en las últimas actualizaciones al parecer usa un certificado flojo, para poder ofrecer conexiones un poco más seguras que en texto plano. Para configurar dicho certificado debemos ir a \textbf{/etc/postfix/main.cf}. Tenemos que modificar los siguientes parámetros. 
+
+\textbf{Nota:} Los parámetros los tenemos que indicar dos veces, debido a que uno es para la recepción y otro es para el envío. Entonces si uno de ellos se omite, ocurrirá que se envíen los datos en texto plano.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{09}
+	\caption{Configuración utilizada para STARTTLS}
+\end{figure}
+
+Ahora inicializamos el servicio y comprobamos si hay errores.
+
+\begin{lstlisting}[style=mybash]
+# Comprobador de si hay fallos en los ficheros de configuracion
+sudo postfix check
+sudo systemctl restart postfix.service
+# Comprobamos si hay errores adicionales
+sudo journalctl -xeu postfix.service
+\end{lstlisting}
+
+
+Finalmente para probar el STARTTLS, podemos instalar netcat y interaccionar con el servidor para que nos pase los parámetros. Dentro de ellos, debe poner STARTTLS.
+
+\begin{lstlisting}[style=mybash]
+nc mail.net 25
+ehlo test
+\end{lstlisting}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{10}
+	\caption{Pruebas de STARTTLS}
+\end{figure}
 
 \newpage 
 \section{Instalación y configuración de Dovecot}
 
-Ahora tenemos que realizar la instalación de Dovecot con el siguiente comando.
+Ahora tenemos que realizar la instalación de Dovecot con el siguiente comando:
 
+\begin{lstlisting}[style=mybash]
+sudo dnf install dovecot
+\end{lstlisting}
+
+Los ficheros de configuración de Dovecot, se encuentran en \textbf{/etc/dovecot/dovecot.conf}, lo primero que debemos configurar son los protocolos que va a soportar. Así como las direcciones IP que debe escuchar.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{11}
+	\caption{Configuración de protocolos de Dovecot}
+\end{figure}
+
+Luego debemos indicar el mecanismo de autenticación de login adicional al de plain. Todo eso está localizado en \textbf{/etc/dovecot/10-auth.conf}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{12}
+	\caption{Configuración de autenticación de Dovecot}
+\end{figure}
+
+Luego debemos configurar el directorio de la bandeja de entrada y salida del usuario. Puede estar ubicado en el \textbf{\$HOME} o en \textbf{/var/mail/\$USER}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{13}
+	\caption{Directorio del mail}
+\end{figure}
+
+Ahora queremos configurar que Postfix, pueda usar Dovecot para la recepción de los mensajes y que este los cataloge en los subdirectorios correspondientes. Para ello debemos contactarlos con el Socket correspondiente. El protocolo que usan es lmtp entre ellos, se ha configurado anteriormente
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{14}
+	\caption{Configuración del Socket}
+\end{figure}
+
+Por último configuramos los certificados compartidos con Postfix, para el uso de conexiones seguras en la ruta \textbf{/etc/dovecot/10-ssl.conf}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.25]{26}
+	\caption{Configuración SSL}
+\end{figure}
+
+Ahora inicializamos el servicio y comprobamos si hay errores.
+\begin{lstlisting}[style=mybash]
+sudo systemctl enable dovecot.service
+sudo systemctl start dovecot.service
+# Comprobamos si hay errores
+sudo journalctl -xeu dovecot.service
+\end{lstlisting}
+
+Ahora nos vamos a un cliente de correo (Thunderbird) y usamos IMAP siguiendo los siguientes pasos.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{15}
+	\caption{Introduciendo las credenciales}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{16}
+	\caption{Verificando el certificado.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{17}
+	\caption{Recepción de mensajes.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{18}
+	\caption{Envío de mensajes.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{19}
+	\caption{Envío de mensajes - parte 2.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{20}
+	\caption{Envío de mensajes - parte 3.}
+\end{figure}
+
+
+
+\newpage
+\section{Instalación de un webmail - squirrelmail}
+
+Para la instalación de Squirrelmail hemos utilizado de base Nginx con php-fpm, los paquetes que he utilizado apra prepara el entorno son:
+
+\begin{lstlisting}[style=mybash]
+sudo dnf install nginx php gettext php-mbstring php-xml
+\end{lstlisting}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{21}
+	\caption{Instalación del servicio web.}
+\end{figure}
+
+Ahora configuramos la ruta de la carpeta junto al nombre de dominio que va a tener el servicio web. Dicho nombre de dominio es el mismo que va a tener el servidor de correo.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{22}
+	\caption{Configuración de NGINX.}
+\end{figure}
+
+Ahora para configurar squirrelmail, aparte de descargarnos los ficheros desde su web, tenemos que instalar perl, porque tiene un script que te ayuda a crear el fichero de configuración que necesita el servicio.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{23}
+	\caption{Instalación de perl.}
+\end{figure}
+
+\begin{lstlisting}[style=mybash]
+sudo dnf install perl
+# Luego de instalar, en /var/www/squirrelmail
+sudo perl config/conf.pl
+\end{lstlisting}
+
+Ahora lanzamos el menú de configuración.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{24}
+	\caption{Configurador de squirrelmail.}
+\end{figure}
+
+Nos vamos a la opción 2 para configurar el servidor web. Cambiamos el nombre de dominio y el resto lo dejamos en localhost.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{25}
+	\caption{Configurador de squirrelmail - Opción 2.}
+\end{figure}
+
+Finalmente ejecutamos los siguientes comandos al terminar de ejecutar el script configurador, esto es necesario para generar el correcto funcionamiento del servicio web que necesita unos directorios especiales.
+
+\begin{lstlisting}[style=mybash]
+# Necesita que las carpetas las tenga el mismo usuario que el servicio web
+sudo chown -R nginx:nginx /var/www/squirrelmail/
+sudo mkdir -p /var/local/squirrelmail/data
+sudo chown -R nginx:nginx /var/local/squirrelmail/
+# Esto es neceario para permitir la conectividad con IMAP
+sudo setsebool httpd_can_network_connect=1
+\end{lstlisting}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{27}
+	\caption{Servicio web activado.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{28}
+	\caption{Servicio web activado - Parte 2.}
+\end{figure}
+
+Notas: Debido a la versión de PHP, algunas funciones no funcionan como deben debido a lo obsoleto del software, por lo que se ha modificado el siguiente archivo la parte del if (donde se ha quitado un !), para que pueda funcionar y verse el menú. Pero sigue teniendo un estado erróneo. En concreto no te deja autenticarte como usuario, quedándose en un bucle donde no puedes salir del menú de autenticación.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{29}
+	\caption{Parte que da error.}
+\end{figure}
 
 %\begin{figure}[H]
 %	\centering
