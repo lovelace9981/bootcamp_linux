@@ -1,0 +1,120 @@
+\input{preambulo.tex}
+
+%----------------------------------------------------------------------------------------
+%	TÍTULO Y DATOS DEL ALUMNO
+%----------------------------------------------------------------------------------------
+\graphicspath{ {img/} }
+
+\title{
+\normalfont \normalsize
+\includegraphics[width=6cm,height=6cm]{logo}\\
+\textsc{\textbf{Bootcamp Especialidad GNU/Linux (2023)}} \\ [25pt] % Your university, school and/or department name(s)
+\horrule{0.5pt} \\[0.4cm] % Thin top horizontal rule
+\huge Lab 01 - Instalación de una distribución de GNU/Linux \\ % The assignment title
+\horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
+}
+
+
+%https://es.overleaf.com/learn/latex/Inserting_Images
+%Ruta relativa de   imagenes
+
+\author{Pedro Antonio Mayorgas Parejo} % Nombre y apellidos
+
+\date{\normalsize\today} % Incluye la fecha actual
+
+%----------------------------------------------------------------------------------------
+% DOCUMENTO
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\maketitle % Muestra el Título
+
+\newpage %inserta un salto de página
+
+\tableofcontents % para generar el índice de contenidos
+
+\newpage
+
+%----------------------------------------------------------------------------------------
+%	Cuestión 1
+%----------------------------------------------------------------------------------------
+
+\section{Parte 1: Creación de los directorios}
+
+Para la creación de los directorios he seguido los siguientes comandos.
+
+\begin{enumerate}
+\item Creamos toda la ruta de subdirectorios, con el parámetro de \textbf{mkdir} que lo crea de forma recursiva.
+\item Creamos los ficheros .map con los curling braces. Permitiendome crear hasta 286 ficheros de manera combinacional. 
+\end{enumerate}
+
+\begin{lstlisting}[style=mybash]
+# Create all subdirectories on the path
+sudo mkdir -p /etc/app/juegos/mapas
+# Create all files using curling braces
+sudo touch /etc/app/juegos/mapas/zona{a..z}mapa{0..10}.map
+\end{lstlisting}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.40]{00}
+	\caption{Ejecución de los comandos.}
+\end{figure}
+
+\newpage
+\section{Parte 2: Script}
+
+Para el script se han seguido todos los requisitos, pero con cambios adicionales como pueden ser comprobaciones en la ejecución del script para que se creen subdirectorios necesarios como la carpeta old, como el fichero del histórico, etc...
+\vspace{5mm}
+
+El fichero usado para archivar es tar \textbf{Tape ARchive}, luego siendo comprimido con \textbf{GZIP}. Todas esas operaciones han sido ejecutadas dentro del script con un bucle for que recorre cada fichero que haya en la ruta de los mapas. El nombre es un string concatenado con date, que permite generar la fecha.
+\vspace{5mm}
+
+Además de incluir un modo verbose o no. El script indicará que se ha ejecutado correctamente, mediante operaciones de comparación internas que comprueba si los ficheros se han introducido correctamente en el comprimido.
+\vspace{5mm}
+
+Por último el script genera un histórico comprobando previamente si el fichero de histórico existe, en caso de que no exista lo crea.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{01}
+	\caption{Modo verbose.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.40]{02}
+	\caption{Modo no verbose.}
+\end{figure}
+
+\newpage
+Fichero script:
+% \vspace{5mm}
+\lstinputlisting[style=mybash]{scripts/script.sh}
+
+
+% \begin{lstlisting}[style=mybash]
+%     # Para una base de datos concreta
+%     mysqldump --user=tiendabd --password=password --databases tiendabd --add-drop-database --add-drop-table [--replace] --host=127.0.0.1 --result-file=dump.sql
+% \end{lstlisting}
+
+
+
+%\begin{figure}[H]
+%	\centering
+%	\includegraphics[scale=0.30]{cuestion_1_1}
+%	\caption{Se puede ver que al no haber un fallo grave, el sistema lo nota como que sigue funcionando pero en un estado degradado.}
+%\end{figure}
+
+%\newpage
+
+%Se pueden hacer include en latex
+%\input{plantilla_include.tex}
+
+
+%-------Bibliografia-----------------------------
+
+%\input{bibliografia.tex}
+
+\end{document}

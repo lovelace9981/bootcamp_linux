@@ -8,9 +8,9 @@
 \title{
 \normalfont \normalsize
 \includegraphics[width=6cm,height=6cm]{logo}\\
-\textsc{\textbf{Asignatura (2021-2022)} \\ Grado en Ingeniería Informática \\ Universidad de Granada} \\ [25pt] % Your university, school and/or department name(s)
+\textsc{\textbf{Bootcamp Especialidad GNU/Linux (2023)}} \\ [25pt] % Your university, school and/or department name(s)
 \horrule{0.5pt} \\[0.4cm] % Thin top horizontal rule
-\huge Memoria Práctica 3 \\ % The assignment title
+\huge Lab 01 - Instalación de una distribución de GNU/Linux \\ % The assignment title
 \horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
 }
 
@@ -39,7 +39,165 @@
 %	Cuestión 1
 %----------------------------------------------------------------------------------------
 
-\section{Seccion}
+\section{Configuración de la Máquina Virtual}
+
+Se ha utilizado QEMU/KVM como sistema hypervisor baremetal, ya que el sistema operativo base que se utiliza, es una distribución de GNU/Linux, permitiendo que pueda tener todas ventajas de aceleración casi sin penalizaciones en el rendimiento.
+\vspace{5mm}
+
+Para la configuración de la máquina virtual, he realizado una configuración base consistente en los siguientes parámetros:
+
+\begin{itemize}
+\item 2 VCPU, donde asignamos un mínimo de 2 CPU para la fluidez y la multitarea real.
+\item 4096 MiB de Memoria RAM, que aunque sea demasiado para las tareas que se le van a asignar a dicha máquina virutal, nos asegura margen futuro.
+\item Disco Virtual formato QCOW2, de un tamaño de 40 GiB. 
+\end{itemize}
+
+Pasos seguidos para el proceso de instalación de la distribución en una Máquina Virtual.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.40]{00}
+	\caption{La configuración comienza preguntando el medio de instalación.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.40]{01}
+	\caption{Seleccionamos la ISO de Ubuntu Server desde la ruta que queramos y el instalador detecta qué sistema es.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.40]{02}
+	\caption{Ahora en este punto de la instalación se configura la capacidad de la memoria RAM y CPU.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.40]{03}
+	\caption{Ahora en este punto de la instalación se configura la capacidad de la memoria RAM y CPU.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.40]{04}
+	\caption{Ahora configuramos el disco duro y su capacidad.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.40]{05}
+	\caption{Ventana resumen de la máquina.}
+\end{figure}
+
+\newpage
+\section{Configuración del sistema operativo base}
+
+En la instalación después de seleccionar el idioma y la región, nos mostrará que versión queremos instalar de Ubuntu Server.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.40]{05}
+	\caption{Configuración de la versión de Ubuntu Server.}
+\end{figure}
+
+Ahora la configuración de la interfaz de red, que es obtenida por DHCPv4 por parte del sistema hypervisor con una puerta de enlace.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.40]{06}
+	\caption{Configuración de red.}
+\end{figure}
+
+Ahora comenzamos a ver la configuración de los discos, en concreto el particionado. \textbf{Seleccionamos el particionado manual}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.40]{07}
+	\caption{Selección del particionado manual.}
+\end{figure}
+
+Dentro de la herramienta de particionado manual, debemos crear una partición EFI ESP, que nos permita alojar ahí las configuraciones, variables y ficheros de bootloader (arranque). Dicha partición está formateada en \textbf{fat32}. La partición se monta en \textbf{/boot/efi}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{08}
+	\caption{Creación de la partición de arranque.}
+\end{figure}
+
+Ahora creamos un VG (Volume Group) de LVM a partir de la partición 2 como PV (Physical Volume), donde a partir de dicho VG, se crea un LV (Logical Volume), que funcionará como "partición" que alojará el sistema de ficheros. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{09}
+	\caption{Creación del VG a partir del PV de la partición 2.}
+\end{figure}
+
+Ahora a continuación, como se ha dicho en el párrafo anterior, tenemos que crear el LV. Para ello nos vamos a \textbf{FREE SPACE} y nos aparecerá la ventana de creación de un LV.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.40]{10}
+	\caption{Creación del LV menú contextual.}
+\end{figure}
+
+Configuración para la raíz \textbf{(ROOT o /)}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{11}
+	\caption{Creación del LV de la raíz.}
+\end{figure}
+
+Configuración para \textbf{/var.}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{12}
+	\caption{Creación del LV de la var.}
+\end{figure}
+
+Repetimos los mismos pasos para \textbf{/home} y esta sería la ventana resumen.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{13}
+	\caption{Creación del LV de home.}
+\end{figure}
+
+Confirmamos el particionado.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{14}
+	\caption{Confirmación del particionado.}
+\end{figure}
+
+Ahora configuramos el usuario-sudo y la contraseña.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{15}
+	\caption{Configuración del usuario.}
+\end{figure}
+
+Proceso de instalación del sistema base.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{16}
+	\caption{Instalación del sistema base.}
+\end{figure}
+
+Prueba final del sistema, con su particionado correcto, recordemos que usamos BTRFS como sistema de ficheros bajo LVM.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{17}
+	\caption{lsblk como demostración.}
+\end{figure}
+
+
 
 % \vspace{5mm}
 
@@ -53,7 +211,7 @@
 
 %\begin{figure}[H]
 %	\centering
-%	\includegraphics[scale=0.30]{cuestion_1_1}
+%	\includegraphics[scale=0.40]{cuestion_1_1}
 %	\caption{Se puede ver que al no haber un fallo grave, el sistema lo nota como que sigue funcionando pero en un estado degradado.}
 %\end{figure}
 

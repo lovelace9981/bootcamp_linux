@@ -1,0 +1,7 @@
+plantillalatex/
+*.ttf
+*.toc
+*.aux
+*.bib
+*.log
+*.out
