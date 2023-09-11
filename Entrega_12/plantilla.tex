@@ -1,0 +1,99 @@
+\input{preambulo.tex}
+
+%----------------------------------------------------------------------------------------
+%	TÍTULO Y DATOS DEL ALUMNO
+%----------------------------------------------------------------------------------------
+\graphicspath{ {img/} }
+
+\title{
+\normalfont \normalsize
+\includegraphics[width=6cm,height=6cm]{logo}\\
+\textsc{\textbf{Bootcamp Especialidad GNU/Linux (2023)}} \\ [25pt] % Your university, school and/or department name(s)
+\horrule{0.5pt} \\[0.4cm] % Thin top horizontal rule
+\huge Lab 12 - Preparación de actualizaciones desatendidas \\ % The assignment title
+\horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
+}
+%https://es.overleaf.com/learn/latex/Inserting_Images
+%Ruta relativa de   imagenes
+
+\author{Pedro Antonio Mayorgas Parejo} % Nombre y apellidos
+
+\date{\normalsize\today} % Incluye la fecha actual
+
+%----------------------------------------------------------------------------------------
+% DOCUMENTO
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\maketitle % Muestra el Título
+
+\newpage %inserta un salto de página
+
+\tableofcontents % para generar el índice de contenidos
+
+\newpage
+
+%----------------------------------------------------------------------------------------
+%	Cuestión 1
+%----------------------------------------------------------------------------------------
+
+\section{Actualizaciones desatendidas en Red Hat}
+
+Para poder realizar actualizaciones desatendidas instalamos el siguiente paquete.
+\begin{lstlisting}[style=mybash]
+sudo dnf install dnf-automatic
+\end{lstlisting}
+
+Luego para activar solamente las actualizaciones desatendidas tenemos que ir a la siguiente ruta \textbf{/etc/dnf/automatic.conf}, para poner lo siguiente.
+% \vspace{5mm}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{00}
+	\caption{Instalación del paquete.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{01}
+	\caption{Permitiendo aplicar las actualizaciones desatendidas.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{02}
+	\caption{Cambiando el modo de notificación de actualizaciones desatendidas a mail.}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.30]{03}
+	\caption{Configurando el email, emisor y receptor.}
+\end{figure}
+
+% \begin{lstlisting}[style=mybash]
+%     # Para una base de datos concreta
+%     mysqldump --user=tiendabd --password=password --databases tiendabd --add-drop-database --add-drop-table [--replace] --host=127.0.0.1 --result-file=dump.sql
+% \end{lstlisting}
+
+
+
+%\begin{figure}[H]
+%	\centering
+%	\includegraphics[scale=0.30]{cuestion_1_1}
+%	\caption{Se puede ver que al no haber un fallo grave, el sistema lo nota como que sigue funcionando pero en un estado degradado.}
+%\end{figure}
+
+%\newpage
+
+%Se pueden hacer include en latex
+%\input{plantilla_include.tex}
+
+
+%-------Bibliografia-----------------------------
+
+%\input{bibliografia.tex}
+
+\end{document}
